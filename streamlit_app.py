@@ -159,6 +159,7 @@ def create_tree_visualization(step_data: dict, width=800, height=600):
                 marker=dict(size=50, color='lightblue', line=dict(width=2, color='darkblue')),
                 text=f"{node.char}<br>({node.freq})",
                 textposition="middle center",
+                textfont=dict(color='black'),  # 文字色を黒に指定
                 name=f"Node {node.char}",
                 showlegend=False
             ))
@@ -179,6 +180,7 @@ def create_tree_visualization(step_data: dict, width=800, height=600):
                     marker=dict(size=40, color='lightgray'),
                     text=f"{node.char if node.char else 'merged'}<br>({node.freq})",
                     textposition="middle center",
+                    textfont=dict(color='black'),  # 文字色を黒に指定
                     showlegend=False
                 ))
         
@@ -190,6 +192,7 @@ def create_tree_visualization(step_data: dict, width=800, height=600):
             text=[f"{merged_nodes[0].char if merged_nodes[0].char else 'merged'}<br>({merged_nodes[0].freq})",
                   f"{merged_nodes[1].char if merged_nodes[1].char else 'merged'}<br>({merged_nodes[1].freq})"],
             textposition="middle center",
+            textfont=dict(color='black'),  # 文字色を黒に指定
             showlegend=False
         ))
         
@@ -200,6 +203,7 @@ def create_tree_visualization(step_data: dict, width=800, height=600):
             marker=dict(size=50, color='lightgreen', line=dict(width=3, color='darkgreen')),
             text=f"merged<br>({new_node.freq})",
             textposition="middle center",
+            textfont=dict(color='black'),  # 文字色を黒に指定
             showlegend=False
         ))
         
@@ -235,15 +239,15 @@ def create_final_tree_visualization(root: HuffmanNode, codes: Dict[str, str]):
     positions = {}
     
     # より良い間隔でノードを配置
-    def calculate_positions(node, x=0.5, y=0.95, width=0.45, depth=0):
+    def calculate_positions(node, x=0.5, y=0.85, width=0.4, depth=0):
         if not node:
             return
         
         positions[node.id] = (x, y)
         
         if node.left or node.right:
-            # 縦の間隔を広く取る
-            vertical_spacing = 0.18
+            # 縦の間隔をより広く取る
+            vertical_spacing = 0.22
             if node.left:
                 calculate_positions(node.left, x - width/2, y - vertical_spacing, width/2, depth + 1)
             if node.right:
@@ -319,15 +323,16 @@ def create_final_tree_visualization(root: HuffmanNode, codes: Dict[str, str]):
     draw_nodes(root)
     
     fig.update_layout(
-        width=1000, height=700,  # サイズを大きく
+        width=1000, height=800,  # 高さを大きく
         showlegend=False,
-        xaxis=dict(showgrid=False, zeroline=False, showticklabels=False, range=[-0.1, 1.1]),
-        yaxis=dict(showgrid=False, zeroline=False, showticklabels=False, range=[0, 1]),
+        xaxis=dict(showgrid=False, zeroline=False, showticklabels=False, range=[-0.15, 1.15]),
+        yaxis=dict(showgrid=False, zeroline=False, showticklabels=False, range=[-0.05, 1.0]),  # 上下のマージンを追加
         title="<b>完成したハフマン木</b><br><span style='color:red'>赤: 左の子(0)</span> | <span style='color:blue'>青: 右の子(1)</span>",
         title_x=0.5,
         title_font_size=16,
         plot_bgcolor='white',
-        paper_bgcolor='#F8F9FA'  # 薄いグレー背景
+        paper_bgcolor='#F8F9FA',  # 薄いグレー背景
+        margin=dict(t=80, b=40, l=40, r=40)  # マージンを追加
     )
     
     return fig
