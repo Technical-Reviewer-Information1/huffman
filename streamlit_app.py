@@ -97,6 +97,51 @@ class HuffmanCoding:
             else:
                 self._generate_codes(node.left, code + "0")
                 self._generate_codes(node.right, code + "1")
+    
+    def compress_text(self, text: str) -> str:
+        """テキストをハフマン符号化で圧縮"""
+        if not self.codes:
+            return ""
+        
+        compressed = ""
+        for char in text:
+            if char in self.codes:
+                compressed += self.codes[char]
+            else:
+                # 未知の文字の場合はそのまま追加（またはエラー処理）
+                st.warning(f"文字 '{char}' はハフマン木に含まれていません")
+        
+        return compressed
+    
+    def decompress_text(self, compressed_text: str) -> str:
+        """圧縮されたビット列をデコード"""
+        if not self.root or not compressed_text:
+            return ""
+        
+        decoded = ""
+        current_node = self.root
+        
+        for bit in compressed_text:
+            if bit == '0':
+                current_node = current_node.left
+            elif bit == '1':
+                current_node = current_node.right
+            else:
+                continue
+            
+            # 葉ノードに到達した場合
+            if current_node and current_node.char:
+                decoded += current_node.char
+                current_node = self.root
+        
+        return decoded
+
+def calculate_frequency(text: str) -> Dict[str, int]:
+    """テキストから文字頻度を計算"""
+    frequency = {}
+    for char in text:
+        frequency[char] = frequency.get(char, 0) + 1
+    return frequency
 
 # ツリー可視化関数
 def create_tree_visualization(step_data: dict, width=800, height=600):
@@ -286,63 +331,141 @@ def main():
     if 'tree_built' not in st.session_state:
         st.session_state.tree_built = False
     
-    # 1. データ入力セクション
-    st.header("📊 1. データ（文字と頻度）の入力")
-    st.write("文字とその出現回数を入力してください：")
+    # モード選択
+    st.header("🎯 学習モードを選択")
+    mode = st.radio(
+        "どちらの方法で学習しますか？",
+        ["📝 文字列から自動で頻度計算", "✏️ 手動で文字と頻度を入力"],
+        horizontal=True
+    )
     
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        # デフォルト値の設定
-        if 'input_data' not in st.session_state:
-            st.session_state.input_data = pd.DataFrame({
-                '文字': ['A', 'B', 'C', 'D'],
-                '出現回数': [6, 3, 10, 1]
-            })
+    if mode == "📝 文字列から自動で頻度計算":
+        # 文字列入力モード
+        st.header("📝 文字列圧縮モード")
+        st.write("圧縮したいテキストを入力してください：")
         
-        # データエディタ
-        edited_df = st.data_editor(
-            st.session_state.input_data,
-            num_rows="dynamic",
-            use_container_width=True,
-            key="data_editor"
-        )
+        col_text1, col_text2 = st.columns([3, 2])
         
-        # プリセットボタン
-        col_preset1, col_preset2 = st.columns(2)
-        with col_preset1:
-            if st.button("📝 サンプル1"):
-                st.session_state.input_data = pd.DataFrame({
-                    '文字': ['A', 'B', 'C', 'D', 'E'],
-                    '出現回数': [5, 9, 12, 13, 16]
-                })
-                st.rerun()
-        
-        with col_preset2:
-            if st.button("📝 サンプル2"):
-                st.session_state.input_data = pd.DataFrame({
-                    '文字': ['あ', 'い', 'う', 'え'],
-                    '出現回数': [8, 4, 2, 1]
-                })
-                st.rerun()
-    
-    with col2:
-        # 入力データの可視化
-        if len(edited_df) > 0:
-            fig_bar = px.bar(
-                edited_df,
-                x='文字',
-                y='出現回数',
-                title="文字の出現頻度",
-                color='出現回数',
-                color_continuous_scale='viridis'
+        with col_text1:
+            # デフォルトテキスト
+            default_text = "HELLO WORLD"
+            input_text = st.text_area(
+                "圧縮するテキスト",
+                value=default_text,
+                height=100,
+                help="任意のテキストを入力してください"
             )
-            fig_bar.update_layout(height=400)
-            st.plotly_chart(fig_bar, use_container_width=True)
+            
+            # サンプルテキストボタン
+            col_sample1, col_sample2, col_sample3 = st.columns(3)
+            with col_sample1:
+                if st.button("📚 サンプル1"):
+                    input_text = "ABRACADABRA"
+                    st.rerun()
+            with col_sample2:
+                if st.button("📚 サンプル2"): 
+                    input_text = "こんにちは世界"
+                    st.rerun()
+            with col_sample3:
+                if st.button("📚 サンプル3"):
+                    input_text = "AAAAABBBBCCCDDE"
+                    st.rerun()
+        
+        with col_text2:
+            if input_text:
+                # 文字頻度の自動計算と表示
+                frequency_dict = calculate_frequency(input_text)
+                freq_df = pd.DataFrame([
+                    {"文字": char, "出現回数": freq, "割合(%)": f"{freq/len(input_text)*100:.1f}"}
+                    for char, freq in frequency_dict.items()
+                ])
+                
+                st.subheader("📊 文字頻度分析")
+                st.dataframe(freq_df, use_container_width=True)
+                
+                # 頻度グラフ
+                fig_freq = px.bar(
+                    freq_df, x='文字', y='出現回数',
+                    title="文字の出現頻度",
+                    color='出現回数',
+                    color_continuous_scale='viridis'
+                )
+                fig_freq.update_layout(height=300)
+                st.plotly_chart(fig_freq, use_container_width=True)
+        
+        # 以降の処理で使用するために頻度辞書を設定
+        if input_text:
+            frequency_dict = calculate_frequency(input_text)
+            # 入力テキストをセッション状態に保存
+            st.session_state.input_text = input_text
     
-    # データ検証
-    if len(edited_df) > 0 and not edited_df['文字'].duplicated().any() and all(edited_df['出現回数'] > 0):
-        frequency_dict = dict(zip(edited_df['文字'], edited_df['出現回数']))
+    else:
+        # 手動入力モード
+        st.session_state.input_text = None  # テキストモードを無効化
+        
+        # 1. データ入力セクション
+        st.header("📊 1. データ（文字と頻度）の入力")
+        st.write("文字とその出現回数を入力してください：")
+    
+    if mode == "✏️ 手動で文字と頻度を入力":
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            # デフォルト値の設定
+            if 'input_data' not in st.session_state:
+                st.session_state.input_data = pd.DataFrame({
+                    '文字': ['A', 'B', 'C', 'D'],
+                    '出現回数': [6, 3, 10, 1]
+                })
+            
+            # データエディタ
+            edited_df = st.data_editor(
+                st.session_state.input_data,
+                num_rows="dynamic",
+                use_container_width=True,
+                key="data_editor"
+            )
+            
+            # プリセットボタン
+            col_preset1, col_preset2 = st.columns(2)
+            with col_preset1:
+                if st.button("📝 サンプル1"):
+                    st.session_state.input_data = pd.DataFrame({
+                        '文字': ['A', 'B', 'C', 'D', 'E'],
+                        '出現回数': [5, 9, 12, 13, 16]
+                    })
+                    st.rerun()
+            
+            with col_preset2:
+                if st.button("📝 サンプル2"):
+                    st.session_state.input_data = pd.DataFrame({
+                        '文字': ['あ', 'い', 'う', 'え'],
+                        '出現回数': [8, 4, 2, 1]
+                    })
+                    st.rerun()
+        
+        with col2:
+            # 入力データの可視化
+            if len(edited_df) > 0:
+                fig_bar = px.bar(
+                    edited_df,
+                    x='文字',
+                    y='出現回数',
+                    title="文字の出現頻度",
+                    color='出現回数',
+                    color_continuous_scale='viridis'
+                )
+                fig_bar.update_layout(height=400)
+                st.plotly_chart(fig_bar, use_container_width=True)
+        
+        # データ検証
+        if len(edited_df) > 0 and not edited_df['文字'].duplicated().any() and all(edited_df['出現回数'] > 0):
+            frequency_dict = dict(zip(edited_df['文字'], edited_df['出現回数']))
+        else:
+            frequency_dict = None
+    
+    # 両方のモードで共通の処理
+    if (mode == "📝 文字列から自動で頻度計算" and input_text) or (mode == "✏️ 手動で文字と頻度を入力" and frequency_dict):
         
         # 2. ハフマン木の構築
         st.header("🌳 2. ハフマン木の作成ステップ")
@@ -460,6 +583,112 @@ def main():
                 
                 頻度の高い文字ほど短いビット列が割り当てられるため、全体のデータ量を効率的に削減できます。
                 """)
+                
+                # 4. テキスト圧縮デモンストレーション（文字列モードの場合）
+                if mode == "📝 文字列から自動で頻度計算" and hasattr(st.session_state, 'input_text') and st.session_state.input_text:
+                    st.header("🗜️ 4. テキスト圧縮デモンストレーション")
+                    
+                    # 圧縮実行
+                    original_text = st.session_state.input_text
+                    compressed_binary = st.session_state.huffman.compress_text(original_text)
+                    
+                    if compressed_binary:
+                        # 圧縮結果の表示
+                        col_compress1, col_compress2 = st.columns(2)
+                        
+                        with col_compress1:
+                            st.subheader("📝 元のテキスト")
+                            st.code(original_text, language=None)
+                            
+                            st.subheader("🔢 圧縮後（バイナリ）")
+                            # 長いバイナリ文字列を見やすく改行
+                            binary_display = ""
+                            for i in range(0, len(compressed_binary), 40):
+                                binary_display += compressed_binary[i:i+40] + "\n"
+                            st.code(binary_display, language=None)
+                        
+                        with col_compress2:
+                            # 詳細統計
+                            original_size_bits = len(original_text) * 8  # ASCII文字として8ビット/文字
+                            compressed_size_bits = len(compressed_binary)
+                            compression_ratio = (1 - compressed_size_bits / original_size_bits) * 100
+                            
+                            st.subheader("📊 圧縮統計")
+                            
+                            metrics_data = pd.DataFrame([
+                                {"項目": "元のテキスト文字数", "値": f"{len(original_text)} 文字"},
+                                {"項目": "元のサイズ（ASCII 8bit）", "値": f"{original_size_bits} bits"},
+                                {"項目": "ハフマン符号ビット数", "値": f"{compressed_size_bits} bits"},
+                                {"項目": "圧縮率", "値": f"{compression_ratio:.1f}%"},
+                                {"項目": "サイズ削減", "値": f"{original_size_bits - compressed_size_bits} bits"}
+                            ])
+                            
+                            st.dataframe(metrics_data, use_container_width=True, hide_index=True)
+                            
+                            # 圧縮効果の可視化
+                            fig_compression = go.Figure(data=[
+                                go.Bar(name='元のサイズ', x=['データサイズ'], y=[original_size_bits], 
+                                       marker_color='lightcoral'),
+                                go.Bar(name='圧縮後サイズ', x=['データサイズ'], y=[compressed_size_bits], 
+                                       marker_color='lightgreen')
+                            ])
+                            fig_compression.update_layout(
+                                title="圧縮効果の比較",
+                                barmode='group',
+                                yaxis_title="ビット数",
+                                height=300
+                            )
+                            st.plotly_chart(fig_compression, use_container_width=True)
+                        
+                        # 展開テスト
+                        st.subheader("🔄 展開テスト")
+                        decompressed_text = st.session_state.huffman.decompress_text(compressed_binary)
+                        
+                        col_decomp1, col_decomp2 = st.columns(2)
+                        with col_decomp1:
+                            st.write("**元のテキスト:**")
+                            st.code(original_text, language=None)
+                        
+                        with col_decomp2:
+                            st.write("**展開されたテキスト:**")
+                            st.code(decompressed_text, language=None)
+                        
+                        # 正確性チェック
+                        if original_text == decompressed_text:
+                            st.success("✅ 展開成功！元のテキストと完全に一致しています。")
+                        else:
+                            st.error("❌ 展開エラー！元のテキストと一致しません。")
+                        
+                        # インタラクティブな文字列テスト
+                        st.subheader("🎮 インタラクティブ圧縮テスト")
+                        test_text = st.text_input(
+                            "任意のテキストを圧縮してみよう：",
+                            value="TEST",
+                            help="学習済みの文字のみ使用してください"
+                        )
+                        
+                        if test_text and st.button("🗜️ 圧縮実行"):
+                            test_compressed = st.session_state.huffman.compress_text(test_text)
+                            test_decompressed = st.session_state.huffman.decompress_text(test_compressed)
+                            
+                            col_test1, col_test2, col_test3 = st.columns(3)
+                            
+                            with col_test1:
+                                st.write("**入力:**")
+                                st.code(test_text, language=None)
+                            
+                            with col_test2:
+                                st.write("**圧縮結果:**")
+                                st.code(test_compressed, language=None)
+                            
+                            with col_test3:
+                                st.write("**展開結果:**")
+                                st.code(test_decompressed, language=None)
+                                
+                                if test_text == test_decompressed:
+                                    st.success("✅ 成功")
+                                else:
+                                    st.error("❌ 失敗")
     
     else:
         st.warning("⚠️ 正しいデータを入力してください（文字の重複なし、出現回数は正数）")
