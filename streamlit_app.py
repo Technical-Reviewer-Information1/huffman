@@ -263,12 +263,12 @@ def create_final_tree_visualization(root: HuffmanNode, codes: Dict[str, str]):
             border_color = '#FF1493'  # ディープピンク
             # 文字コードを大きく表示
             text = f"<b>{node.char}</b><br>頻度: {node.freq}<br><b>符号: '{codes[node.char]}'</b>"
-            size = 80
+            size = 100  # 80から100に拡大
         else:  # 内部ノード
             color = '#87CEEB'  # スカイブルー
             border_color = '#4169E1'  # ロイヤルブルー
             text = f"<b>合計: {node.freq}</b>"
-            size = 70
+            size = 90  # 70から90に拡大
         
         fig.add_trace(go.Scatter(
             x=[x], y=[y],
@@ -276,7 +276,7 @@ def create_final_tree_visualization(root: HuffmanNode, codes: Dict[str, str]):
             marker=dict(size=size, color=color, line=dict(width=3, color=border_color)),
             text=text,
             textposition="middle center",
-            textfont=dict(size=12, color='black'),
+            textfont=dict(size=14, color='black'),  # フォントサイズを14に拡大、色を明示的に黒に指定
             showlegend=False
         ))
         
@@ -382,14 +382,23 @@ def main():
             with col_sample1:
                 if st.button("📚 サンプル1"):
                     st.session_state.sample_text = "ABRACADABRA"
+                    # ハフマン木をリセット
+                    st.session_state.tree_built = False
+                    st.session_state.huffman = HuffmanCoding()
                     st.rerun()
             with col_sample2:
                 if st.button("📚 サンプル2"): 
                     st.session_state.sample_text = "こんにちは世界"
+                    # ハフマン木をリセット
+                    st.session_state.tree_built = False
+                    st.session_state.huffman = HuffmanCoding()
                     st.rerun()
             with col_sample3:
                 if st.button("📚 サンプル3"):
                     st.session_state.sample_text = "AAAAABBBBCCCDDE"
+                    # ハフマン木をリセット
+                    st.session_state.tree_built = False
+                    st.session_state.huffman = HuffmanCoding()
                     st.rerun()
             
             input_text = st.text_area(
@@ -398,6 +407,12 @@ def main():
                 height=100,
                 help="任意のテキストを入力してください"
             )
+            
+            # テキストが変更された場合はハフマン木をリセット
+            if input_text != st.session_state.sample_text:
+                st.session_state.sample_text = input_text
+                st.session_state.tree_built = False
+                st.session_state.huffman = HuffmanCoding()
         
         with col_text2:
             if input_text:
