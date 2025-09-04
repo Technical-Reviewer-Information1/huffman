@@ -234,17 +234,20 @@ def create_final_tree_visualization(root: HuffmanNode, codes: Dict[str, str]):
     fig = go.Figure()
     positions = {}
     
-    def calculate_positions(node, x=0.5, y=1, width=0.4, depth=0):
+    # より良い間隔でノードを配置
+    def calculate_positions(node, x=0.5, y=0.95, width=0.45, depth=0):
         if not node:
             return
         
         positions[node.id] = (x, y)
         
         if node.left or node.right:
+            # 縦の間隔を広く取る
+            vertical_spacing = 0.18
             if node.left:
-                calculate_positions(node.left, x - width/2, y - 0.15, width/2, depth + 1)
+                calculate_positions(node.left, x - width/2, y - vertical_spacing, width/2, depth + 1)
             if node.right:
-                calculate_positions(node.right, x + width/2, y - 0.15, width/2, depth + 1)
+                calculate_positions(node.right, x + width/2, y - vertical_spacing, width/2, depth + 1)
     
     calculate_positions(root)
     
@@ -256,39 +259,59 @@ def create_final_tree_visualization(root: HuffmanNode, codes: Dict[str, str]):
         x, y = positions[node.id]
         
         if node.char:  # 葉ノード
-            color = 'lightcoral'
-            text = f"{node.char}<br>({node.freq})<br>'{codes[node.char]}'"
+            color = '#FFB6C1'  # ライトピンク
+            border_color = '#FF1493'  # ディープピンク
+            # 文字コードを大きく表示
+            text = f"<b>{node.char}</b><br>頻度: {node.freq}<br><b>符号: '{codes[node.char]}'</b>"
+            size = 80
         else:  # 内部ノード
-            color = 'lightblue'
-            text = f"({node.freq})"
+            color = '#87CEEB'  # スカイブルー
+            border_color = '#4169E1'  # ロイヤルブルー
+            text = f"<b>合計: {node.freq}</b>"
+            size = 70
         
         fig.add_trace(go.Scatter(
             x=[x], y=[y],
             mode='markers+text',
-            marker=dict(size=60, color=color, line=dict(width=2, color='darkblue')),
+            marker=dict(size=size, color=color, line=dict(width=3, color=border_color)),
             text=text,
             textposition="middle center",
+            textfont=dict(size=12, color='black'),
             showlegend=False
         ))
         
-        # 子ノードへの線
+        # 子ノードへの線 - より太く目立つように
         if node.left:
             left_x, left_y = positions[node.left.id]
             fig.add_shape(type="line", x0=x, y0=y, x1=left_x, y1=left_y,
-                         line=dict(color="black", width=2))
-            # "0"ラベル
+                         line=dict(color="#2F4F4F", width=4))  # 濃いグレー、太い線
+            # "0"ラベルを大きく明確に
             mid_x, mid_y = (x + left_x) / 2, (y + left_y) / 2
-            fig.add_annotation(x=mid_x-0.02, y=mid_y+0.02, text="0", showarrow=False,
-                              font=dict(size=14, color="red"))
+            fig.add_annotation(
+                x=mid_x-0.03, y=mid_y+0.03, 
+                text="<b>0</b>", 
+                showarrow=False,
+                font=dict(size=18, color="red"),
+                bgcolor="white",
+                bordercolor="red",
+                borderwidth=2
+            )
         
         if node.right:
             right_x, right_y = positions[node.right.id]
             fig.add_shape(type="line", x0=x, y0=y, x1=right_x, y1=right_y,
-                         line=dict(color="black", width=2))
-            # "1"ラベル
+                         line=dict(color="#2F4F4F", width=4))  # 濃いグレー、太い線
+            # "1"ラベルを大きく明確に
             mid_x, mid_y = (x + right_x) / 2, (y + right_y) / 2
-            fig.add_annotation(x=mid_x+0.02, y=mid_y+0.02, text="1", showarrow=False,
-                              font=dict(size=14, color="red"))
+            fig.add_annotation(
+                x=mid_x+0.03, y=mid_y+0.03, 
+                text="<b>1</b>", 
+                showarrow=False,
+                font=dict(size=18, color="blue"),
+                bgcolor="white",
+                bordercolor="blue",
+                borderwidth=2
+            )
         
         draw_nodes(node.left)
         draw_nodes(node.right)
@@ -296,12 +319,15 @@ def create_final_tree_visualization(root: HuffmanNode, codes: Dict[str, str]):
     draw_nodes(root)
     
     fig.update_layout(
-        width=800, height=600,
+        width=1000, height=700,  # サイズを大きく
         showlegend=False,
-        xaxis=dict(showgrid=False, zeroline=False, showticklabels=False, range=[0, 1]),
+        xaxis=dict(showgrid=False, zeroline=False, showticklabels=False, range=[-0.1, 1.1]),
         yaxis=dict(showgrid=False, zeroline=False, showticklabels=False, range=[0, 1]),
-        title="完成したハフマン木 (赤数字: 0=左, 1=右)",
-        title_x=0.5
+        title="<b>完成したハフマン木</b><br><span style='color:red'>赤: 左の子(0)</span> | <span style='color:blue'>青: 右の子(1)</span>",
+        title_x=0.5,
+        title_font_size=16,
+        plot_bgcolor='white',
+        paper_bgcolor='#F8F9FA'  # 薄いグレー背景
     )
     
     return fig
@@ -347,29 +373,31 @@ def main():
         col_text1, col_text2 = st.columns([3, 2])
         
         with col_text1:
-            # デフォルトテキスト
-            default_text = "HELLO WORLD"
-            input_text = st.text_area(
-                "圧縮するテキスト",
-                value=default_text,
-                height=100,
-                help="任意のテキストを入力してください"
-            )
+            # セッション状態でテキストを管理
+            if 'sample_text' not in st.session_state:
+                st.session_state.sample_text = "HELLO WORLD"
             
             # サンプルテキストボタン
             col_sample1, col_sample2, col_sample3 = st.columns(3)
             with col_sample1:
                 if st.button("📚 サンプル1"):
-                    input_text = "ABRACADABRA"
+                    st.session_state.sample_text = "ABRACADABRA"
                     st.rerun()
             with col_sample2:
                 if st.button("📚 サンプル2"): 
-                    input_text = "こんにちは世界"
+                    st.session_state.sample_text = "こんにちは世界"
                     st.rerun()
             with col_sample3:
                 if st.button("📚 サンプル3"):
-                    input_text = "AAAAABBBBCCCDDE"
+                    st.session_state.sample_text = "AAAAABBBBCCCDDE"
                     st.rerun()
+            
+            input_text = st.text_area(
+                "圧縮するテキスト",
+                value=st.session_state.sample_text,
+                height=100,
+                help="任意のテキストを入力してください"
+            )
         
         with col_text2:
             if input_text:
