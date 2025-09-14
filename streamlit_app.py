@@ -341,11 +341,10 @@ def create_final_tree_visualization(root: HuffmanNode, codes: Dict[str, str]):
 def main():
     st.set_page_config(
         page_title="ハフマン符号化可視化",
-        page_icon="🌳",
         layout="wide"
     )
     
-    st.title("🌳 データの圧縮③ハフマン符号化")
+    st.title("データの圧縮③ハフマン符号化（pp.171-174）")
     st.caption("Created by Dit-Lab.(Daiki ITO)")
     st.caption("Supported by Tomoaki ATSUMI")
     
