@@ -136,13 +136,14 @@
         </div>
       </div>
       <div class="metrics" style="margin-top:16px">
+        <div class="metric"><div class="k">圧縮率</div><div class="v" id="mRatio">0%</div><div class="s">圧縮後 ÷ 圧縮前 × 100</div></div>
         <div class="metric"><div class="k">削減できたビット数</div><div class="v" id="mSaved">0</div><div class="s">ビット</div></div>
-        <div class="metric"><div class="k">圧縮率（削減の割合）</div><div class="v" id="mRatio">0%</div><div class="s">固定長と比べて</div></div>
-        <div class="metric"><div class="k">圧縮後の大きさ</div><div class="v" id="mAfter">0%</div><div class="s">元を100%として</div></div>
+        <div class="metric"><div class="k">減った割合</div><div class="v" id="mAfter">0%</div><div class="s">元を100%として</div></div>
       </div>
       <div class="note warn" style="margin-top:14px">
-        圧縮率＝<span class="mono">(固定長のビット数 − ハフマンのビット数) ÷ 固定長のビット数 × 100</span>。
-        共通テストでは「何ビット減ったか」「1文字あたり平均何ビットか」がよく問われます。
+        <strong>この本の定義</strong>では、圧縮率＝<span class="mono">圧縮後のデータ量 ÷ 圧縮前のデータ量 × 100</span>（％）です。
+        つまり<strong>圧縮率が小さいほどよく縮んでいる</strong>ことになります。
+        「何％減ったか」を圧縮率と呼ぶ本もあるので、問題文の定義を必ず確認しましょう。
       </div>
     </div>
   </section>

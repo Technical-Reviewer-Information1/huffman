@@ -334,7 +334,8 @@
     let hTotal = 0;
     S.freq.forEach((n, ch) => { hTotal += S.codes[ch].length * n; });
     const saved = fTotal - hTotal;
-    const ratio = fTotal ? saved / fTotal * 100 : 0;
+    const ratio = fTotal ? hTotal / fTotal * 100 : 0;      // 本書の定義：圧縮後 ÷ 圧縮前 × 100
+    const cut = fTotal ? saved / fTotal * 100 : 0;
 
     $('fbits').textContent = fb;
     $('fTotal').textContent = fTotal + ' ビット';
@@ -342,7 +343,7 @@
     $('hTotal').textContent = hTotal + ' ビット';
     $('mSaved').textContent = saved;
     $('mRatio').textContent = ratio.toFixed(1) + '%';
-    $('mAfter').textContent = (100 - ratio).toFixed(1) + '%';
+    $('mAfter').textContent = cut.toFixed(1) + '%';
     const max = Math.max(fTotal, hTotal) || 1;
     setTimeout(() => {
       $('fFill').style.width = (fTotal / max * 100) + '%';
