@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>データの圧縮③ハフマン符号化｜情報Ⅰ共通テスト対策問題集</title>
+<meta name="description" content="ハフマン符号化のしくみを、自分で木を組み立てながら体験的に学べる学習アプリです。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 fill=%22%2315181c%22/%3E%3Ctext x=%2216%22 y=%2222%22 font-size=%2218%22 font-family=%22monospace%22 fill=%22%23fff%22 text-anchor=%22middle%22%3E01%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+<header class="app-header">
+  <div class="inner">
+    <span class="eyebrow">第 5 章　デジタル　5-14</span>
+    <h1>データの圧縮③ ハフマン符号化（pp.171-174）</h1>
+    <p class="lead">よく出てくる文字ほど短い符号にすると、データはどれだけ小さくなるのか。<strong>自分でハフマン木を組み立てながら</strong>確かめましょう。</p>
+    <p class="credit">Created by Dit-Lab.(Daiki ITO)　/　Supported by Tomoaki ATSUMI</p>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- ============ STEP 1 ============ -->
+  <section class="step" id="step1">
+    <h2><span class="no">STEP 1</span>圧縮したいデータを決める</h2>
+    <p class="desc">文字の<strong>出現回数</strong>がハフマン符号化の出発点です。文章を入力するか、文字と回数を直接決めてください。</p>
+
+    <div class="seg" role="group" aria-label="入力方法">
+      <button id="modeText" aria-pressed="true">文章から数える</button>
+      <button id="modeManual" aria-pressed="false">文字と回数を決める</button>
+    </div>
+
+    <div class="grid c2" style="margin-top:16px">
+      <div>
+        <div id="paneText">
+          <label class="fld" for="inputText">圧縮する文章</label>
+          <textarea id="inputText" rows="3" spellcheck="false">AAAAABBBBCCCDDE</textarea>
+          <div class="btn-row" style="margin-top:9px">
+            <span class="badge">例</span>
+            <button class="btn sm" data-sample="AAAAABBBBCCCDDE">AAAAABBBBCCCDDE</button>
+            <button class="btn sm" data-sample="ABRACADABRA">ABRACADABRA</button>
+            <button class="btn sm" data-sample="HELLO WORLD">HELLO WORLD</button>
+            <button class="btn sm" data-sample="もももすももももももうち">もももすももも…</button>
+          </div>
+        </div>
+
+        <div id="paneManual" hidden>
+          <label class="fld">文字とその出現回数</label>
+          <div class="pairs" id="pairs"></div>
+          <div class="btn-row" style="margin-top:9px">
+            <button class="btn sm" id="addPair">＋ 行を追加</button>
+            <button class="btn sm" data-preset="A:6,B:3,C:10,D:1">例 A6 B3 C10 D1</button>
+            <button class="btn sm" data-preset="A:5,B:9,C:12,D:13,E:16">例 A5 B9 C12 D13 E16</button>
+          </div>
+        </div>
+
+        <div class="note ng" id="err1" hidden style="margin-top:12px"></div>
+      </div>
+
+      <div class="panel">
+        <h3>出現回数</h3>
+        <div id="freqBars"></div>
+        <div class="metrics" style="margin-top:12px">
+          <div class="metric"><div class="k">文字の種類</div><div class="v" id="mKinds">0</div></div>
+          <div class="metric"><div class="k">全体の文字数</div><div class="v" id="mTotal">0</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ STEP 2 ============ -->
+  <section class="step" id="step2">
+    <h2><span class="no">STEP 2</span>ハフマン木を組み立てる</h2>
+    <p class="desc">ルールはたった1つ。<strong>いま残っているカードのうち、数の小さい2枚を選んでくっつける</strong>。これをカードが1枚になるまでくり返します。</p>
+
+    <div class="seg" role="group" aria-label="組み立て方法">
+      <button id="modeSelf" aria-pressed="true">自分で選ぶ</button>
+      <button id="modeAuto" aria-pressed="false">お手本を見る</button>
+    </div>
+
+    <div class="panel" style="margin-top:16px">
+      <h3>残っているカード　<span class="badge" id="poolCount">0枚</span></h3>
+      <div class="pool" id="pool" role="group" aria-label="結合するカードを2枚選ぶ"></div>
+
+      <div class="btn-row" style="margin-top:12px">
+        <button class="btn primary" id="mergeBtn" disabled>選んだ2枚をくっつける</button>
+        <button class="btn" id="undoBtn" disabled>1つ戻す</button>
+        <button class="btn ghost" id="resetBtn">最初から</button>
+        <span class="badge" id="mergeCount">結合 0 回</span>
+      </div>
+
+      <div class="btn-row" id="autoCtrl" style="margin-top:12px" hidden>
+        <button class="btn" id="prevStep">◀ 前へ</button>
+        <button class="btn primary" id="playBtn">▶ 自動再生</button>
+        <button class="btn" id="nextStep">次へ ▶</button>
+        <span class="badge" id="stepLabel">ステップ 0 / 0</span>
+      </div>
+
+      <div class="note" id="fb2" hidden style="margin-top:12px"></div>
+    </div>
+
+    <div class="panel" style="margin-top:14px">
+      <h3>いま育っている木</h3>
+      <div class="tree-box" id="treeBuild"></div>
+    </div>
+  </section>
+
+  <!-- ============ STEP 3 ============ -->
+  <section class="step" id="step3">
+    <h2><span class="no">STEP 3</span>できあがった木から符号を読む</h2>
+    <p class="desc">根（いちばん上）から葉（文字）まで、<strong class="bit0">左へ進んだら 0</strong>・<strong class="bit1">右へ進んだら 1</strong> と読むと、その文字の符号になります。</p>
+
+    <div class="note info" id="lock3">STEP 2 で木を完成させると表示されます。</div>
+
+    <div id="body3" hidden>
+      <div class="tree-box" id="treeFinal"></div>
+      <div class="tree-legend">
+        <span class="k"><span class="sw" style="background:var(--zero)"></span>左＝0</span>
+        <span class="k"><span class="sw" style="background:var(--one)"></span>右＝1</span>
+        <span class="k">丸の中の数字は出現回数の合計</span>
+      </div>
+
+      <div class="grid c2" style="margin-top:16px">
+        <div class="panel">
+          <h3>符号表</h3>
+          <div class="tbl-scroll">
+            <table class="tbl">
+              <thead><tr><th>文字</th><th>出現回数</th><th>符号</th><th>符号の長さ</th><th>使うビット</th></tr></thead>
+              <tbody id="codeTable"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="panel">
+          <h3>気づいてほしいこと</h3>
+          <div id="insight"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ STEP 4 ============ -->
+  <section class="step" id="step4">
+    <h2><span class="no">STEP 4</span>どれだけ小さくなったか比べる</h2>
+    <p class="desc">すべての文字を同じ長さで表す<strong>固定長符号</strong>と比べます。</p>
+
+    <div class="note info" id="lock4">STEP 2 で木を完成させると表示されます。</div>
+
+    <div id="body4" hidden>
+      <div class="cmp">
+        <div class="row fixed">
+          <div class="cap"><span>固定長符号（<span id="fbits">0</span>ビット／文字）</span><span id="fTotal">0 ビット</span></div>
+          <div class="track"><div class="fill" id="fFill"></div></div>
+        </div>
+        <div class="row huff">
+          <div class="cap"><span>ハフマン符号（平均 <span id="hAvg">0</span> ビット／文字）</span><span id="hTotal">0 ビット</span></div>
+          <div class="track"><div class="fill" id="hFill"></div></div>
+        </div>
+      </div>
+      <div class="metrics" style="margin-top:16px">
+        <div class="metric"><div class="k">削減できたビット数</div><div class="v" id="mSaved">0</div><div class="s">ビット</div></div>
+        <div class="metric"><div class="k">圧縮率（削減の割合）</div><div class="v" id="mRatio">0%</div><div class="s">固定長と比べて</div></div>
+        <div class="metric"><div class="k">圧縮後の大きさ</div><div class="v" id="mAfter">0%</div><div class="s">元を100%として</div></div>
+      </div>
+      <div class="note warn" style="margin-top:14px">
+        圧縮率＝<span class="mono">(固定長のビット数 − ハフマンのビット数) ÷ 固定長のビット数 × 100</span>。
+        共通テストでは「何ビット減ったか」「1文字あたり平均何ビットか」がよく問われます。
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ STEP 5 ============ -->
+  <section class="step" id="step5">
+    <h2><span class="no">STEP 5</span>符号化と復号をためす</h2>
+    <p class="desc">作った符号表で、文字列 → ビット列 → 文字列 を往復させてみましょう。</p>
+
+    <div class="note info" id="lock5">STEP 2 で木を完成させると表示されます。</div>
+
+    <div id="body5" hidden>
+      <div class="grid c2">
+        <div class="panel">
+          <h3>符号化（文字 → ビット列）</h3>
+          <label class="fld" for="encIn">文字列（符号表にある文字だけ）</label>
+          <input type="text" id="encIn" class="mono" spellcheck="false">
+          <div class="bits" id="encOut" style="margin-top:10px">—</div>
+          <p style="font-size:.82rem;color:var(--ink-2);margin-top:8px" id="encStat"></p>
+        </div>
+
+        <div class="panel">
+          <h3>復号（ビット列 → 文字）</h3>
+          <label class="fld" for="decIn">0 と 1 のならび</label>
+          <input type="text" id="decIn" class="mono" spellcheck="false" inputmode="numeric">
+          <div class="bits" id="decOut" style="margin-top:10px">—</div>
+          <div class="btn-row" style="margin-top:10px">
+            <button class="btn sm" id="stepDecode">1文字ずつ木をたどる</button>
+            <button class="btn sm ghost" id="resetDecode">最初から</button>
+          </div>
+          <div class="tree-box" id="treeDecode" style="margin-top:10px"></div>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top:16px">
+        <h3>確認クイズ　<span class="badge">正解 <span class="score" id="qScore">0</span> / <span class="score" id="qTotal">0</span></span></h3>
+        <p id="qText" style="font-weight:700"></p>
+        <div class="quiz-choices" id="qChoices" style="margin-top:10px"></div>
+        <div class="note" id="qFb" hidden style="margin-top:10px"></div>
+        <div class="btn-row" style="margin-top:10px"><button class="btn" id="qNext">次の問題</button></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="step">
+    <h2><span class="no">まとめ</span>ハフマン符号化のポイント</h2>
+    <ul style="margin:0;padding-left:1.2em;color:var(--ink-2);font-size:.92rem;line-height:2">
+      <li>ハフマン符号化は<strong>出現回数が多い文字ほど短い符号</strong>を割り当てる可変長符号。</li>
+      <li>木は<strong>小さい2つを結合</strong>する操作のくり返しでできる。</li>
+      <li>どの符号も<strong>他の符号の先頭になっていない</strong>（語頭符号）ので、区切りがなくても正しく復号できる。</li>
+      <li>ZIP・JPEG・MP3 など、身のまわりの圧縮技術で使われている。</li>
+    </ul>
+  </section>
+
+</main>
+
+<footer class="app-footer">
+  情報Ⅰ 共通テスト対策問題集（技術評論社）連動Webアプリ　/　Created by Dit-Lab.(Daiki ITO)　/　Supported by Tomoaki ATSUMI
+</footer>
+
+<script src="js/huffman.js"></script>
+<script src="js/tree.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
