@@ -511,6 +511,7 @@
     $('qNext').addEventListener('click', newQuestion);
 
     setInputMode('text');
+    if (window.Terms) { window.Terms.glossary(document.getElementById('glossBox'), ["ハフマン符号化", "可変長符号", "固定長符号", "語頭符号", "圧縮率", "可逆圧縮", "非可逆圧縮"]); window.Terms.attach(); }
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

@@ -4,28 +4,17 @@
 
 **公開URL**: https://technical-reviewer-information1.github.io/huffman/
 
-## このアプリでできること
-
-| STEP | 内容 |
-|---|---|
-| 1 | 文章、または文字と出現回数からデータを決める |
-| 2 | **自分でカードを2枚選んでハフマン木を組み立てる**（誤った選択にはその場で理由を返す）／お手本の再生 |
-| 3 | 完成した木から符号表を読む（左=0・右=1） |
-| 4 | 固定長符号とのビット数比較・圧縮率 |
-| 5 | 符号化／復号を試す・木を1文字ずつたどる・確認クイズ |
+よく出てくる文字ほど短い符号にすると、データはどれだけ小さくなるのか。自分でハフマン木を組み立てながら確かめましょう。
 
 ## 技術
 
-- 静的HTML / CSS / JavaScript のみ。ビルド不要・外部CDN不使用・通信なし
-- GitHub Pages で配信（Python・Streamlit 不要）
-- スマートフォン／タブレット／PC 対応
+静的な HTML / CSS / JavaScript のみで動作します。ビルド不要・外部CDN不使用・サーバ通信なし。
+GitHub Pages で配信しており、Python や Streamlit は不要です。スマートフォン／タブレット／PC に対応。
 
 ```
 index.html
-css/style.css   共通スタイル（全アプリ共通）
-css/app.css     このアプリ固有
-js/huffman.js   アルゴリズム本体
-js/tree.js      木のSVG描画
+css/style.css   全アプリ共通スタイル
+css/app.css     このアプリ固有のスタイル
 js/app.js       画面制御
 ```
 
