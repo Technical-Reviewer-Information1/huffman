@@ -485,6 +485,12 @@
   function escapeHtml(s) { return String(s).replace(/[&<>"]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m])); }
 
   /* ============ 起動 ============ */
+  /* 本文の問題 */
+  function drawBook() {
+    if (!document.getElementById('bookBox')) return;
+    window.Quiz.choice('bookBox', 'bookNote', [{"k": "ア", "q": "A〜Dの4種類を固定長符号で表すには、1文字あたり少なくとも何ビット必要か。", "ch": ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"], "a": 2, "why": "2¹＝2では足りず、2²＝4でちょうど4種類を表せるので<strong>2ビット</strong>です。"}, {"k": "イウ", "q": "20文字を固定長符号で表すと、圧縮前のデータ量は何ビットか。（十の位＝イ、一の位＝ウ）", "ch": ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"], "a": 4, "why": "2ビット × 20文字 ＝ <strong>40ビット</strong>。十の位は 4 です。"}, {"k": "エオ", "q": "ハフマン符号化した後のデータ量は何ビットか。（十の位＝エ、一の位＝オ）", "ch": ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"], "a": 3, "why": "A:6×2＋B:3×3＋C:10×1＋D:1×3 ＝ 12＋9＋10＋3 ＝ <strong>34ビット</strong>。十の位は 3 です。"}, {"k": "キ", "q": "「AAAAAAAABBBBCCCDDEEF」の圧縮率（圧縮後÷圧縮前×100）は何％か。", "ch": ["58", "68", "78", "88"], "a": 2, "why": "固定長は6種類なので3ビット×20＝60ビット。ハフマンでは47ビットなので 47÷60×100 ＝ 78.3… ≒ <strong>78％</strong>です。STEP 4 で確かめられます。"}], "本文の答えは【ア】②　【イ】④　【ウ】⓪　【エ】③　【オ】④　【カ】⓪　【キ】② です。");
+  }
+
   function init() {
     $('modeText').addEventListener('click', () => setInputMode('text'));
     $('modeManual').addEventListener('click', () => setInputMode('manual'));
@@ -512,6 +518,7 @@
     $('qNext').addEventListener('click', newQuestion);
 
     setInputMode('text');
+    drawBook();
     if (window.Terms) { window.Terms.glossary(document.getElementById('glossBox'), ["ハフマン符号化", "可変長符号", "固定長符号", "語頭符号", "圧縮率", "可逆圧縮", "非可逆圧縮"]); window.Terms.attach(); }
   }
 
