@@ -4,10 +4,10 @@
  "pp": "pp.171-174",
  "lead": "よく出てくる文字ほど短い符号にすると、データはどれだけ小さくなるのか。自分でハフマン木を組み立てながら確かめましょう。",
  "scripts": [
-  "huffman.js",
-  "tree.js",
   "terms.js",
   "quiz.js",
+  "huffman.js",
+  "tree.js",
   "app.js"
  ],
  "use": {
